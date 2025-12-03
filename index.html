@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel Schema Analyzer - AI-Powered Data Detection</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen">
+  
+  <!-- API Key Modal -->
+  <div id="api-key-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i data-lucide="key" class="w-6 h-6 text-blue-400"></i>
+        <h3 class="text-xl font-bold text-white">Gemini API Key Required</h3>
+      </div>
+      <div class="modal-body">
+        <p class="text-slate-300 mb-4">
+          This application uses Google's Gemini AI for schema analysis. Please enter your API key to continue.
+        </p>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-400 mb-2">API Key</label>
+          <input 
+            type="password" 
+            id="api-key-input" 
+            placeholder="Enter your Gemini API key"
+            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+        <div class="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg mb-4">
+          <i data-lucide="info" class="w-4 h-4 text-blue-400 mt-0.5 shrink-0"></i>
+          <div class="text-xs text-slate-300">
+            <p class="font-medium mb-1">Don't have an API key?</p>
+            <p>Get one free at <a href="https://ai.google.dev/" target="_blank" class="text-blue-400 hover:text-blue-300 underline">ai.google.dev</a></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mb-4">
+          <input type="checkbox" id="remember-key" class="w-4 h-4" />
+          <label for="remember-key" class="text-sm text-slate-400">Remember key (stored locally)</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="api-key-submit" class="btn btn-primary">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i data-lucide="database" class="w-8 h-8 text-blue-400"></i>
+          <h1 class="text-2xl font-bold text-white">Excel Schema Analyzer</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 text-sm text-slate-400">
+            <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
+            <span>Powered by Gemini AI</span>
+          </div>
+          <button id="change-api-key" class="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1">
+            <i data-lucide="settings" class="w-3 h-3"></i>
+            Change API Key
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress Steps -->
+  <div class="container mx-auto px-6 py-6">
+    <div class="flex items-center justify-center gap-4 max-w-2xl mx-auto">
+      <div id="step-upload" class="flex items-center gap-2 text-blue-400 font-medium">
+        <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center">
+          <span class="text-sm">1</span>
+        </div>
+        <span class="text-sm">Upload</span>
+      </div>
+      <div class="h-px w-16 bg-slate-700"></div>
+      <div id="step-analyze" class="flex items-center gap-2 text-slate-500 font-medium">
+        <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center">
+          <span class="text-sm">2</span>
+        </div>
+        <span class="text-sm">Analyze</span>
+      </div>
+      <div class="h-px w-16 bg-slate-700"></div>
+      <div id="step-review" class="flex items-center gap-2 text-slate-500 font-medium">
+        <div class="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center">
+          <span class="text-sm">3</span>
+        </div>
+        <span class="text-sm">Review</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 pb-20">
+    
+    <!-- Upload View -->
+    <div id="view-upload" class="max-w-2xl mx-auto">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-white mb-3">Intelligent Excel Schema Detection</h2>
+        <p class="text-slate-400">Upload messy Excel files and let AI detect tables, infer schemas, and suggest semantic roles</p>
+      </div>
+      
+      <div class="border-2 border-dashed border-slate-700 rounded-xl p-12 text-center hover:border-blue-500 transition-colors cursor-pointer bg-slate-900/30"
+           onclick="document.getElementById('file-input').click()">
+        <i data-lucide="upload-cloud" class="w-16 h-16 text-slate-500 mx-auto mb-4"></i>
+        <p class="text-lg text-slate-300 mb-2">Drop Excel file here or click to browse</p>
+        <p class="text-sm text-slate-500">Supports .xlsx and .xls files</p>
+        <input type="file" id="file-input" accept=".xlsx,.xls" class="hidden" />
+      </div>
+
+      <div class="mt-8 p-4 bg-slate-900/50 rounded-lg border border-slate-800">
+        <div class="flex items-start gap-3">
+          <i data-lucide="info" class="w-5 h-5 text-blue-400 mt-0.5"></i>
+          <div class="text-sm text-slate-400">
+            <p class="font-medium text-slate-300 mb-2">AI-Powered Features:</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>Automatic table detection in messy layouts</li>
+              <li>Multi-row header flattening</li>
+              <li>Semantic role inference (Dimension, Metric, Entity, etc.)</li>
+              <li>Hierarchy and time dimension detection</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing View -->
+    <div id="view-processing" class="hidden max-w-4xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-500/20 rounded-full mb-4">
+          <i data-lucide="brain" class="w-8 h-8 text-purple-400 animate-pulse"></i>
+        </div>
+        <h2 id="processing-text" class="text-2xl font-bold text-white mb-2">Analyzing with Gemini AI...</h2>
+        <p class="text-slate-400">Please wait while AI processes your data</p>
+      </div>
+    </div>
+
+    <!-- Review View -->
+    <div id="view-review" class="hidden max-w-6xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-white">Review Detected Schema</h2>
+        <button id="btn-confirm" class="btn btn-primary">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          Export Schema
+        </button>
+      </div>
+      <div id="schema-container" class="space-y-8"></div>
+    </div>
+
+  </main>
+
+  <!-- Console Panel -->
+  <aside class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 h-64 overflow-hidden flex flex-col">
+    <div class="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-slate-950">
+      <div class="flex items-center gap-2">
+        <i data-lucide="terminal" class="w-4 h-4 text-green-400"></i>
+        <span class="text-sm font-mono text-slate-300">System Console</span>
+      </div>
+      <button onclick="document.getElementById('console-output').innerHTML = ''"
+              class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+        Clear
+      </button>
+    </div>
+    <div id="console-output" class="flex-1 overflow-y-auto p-4 custom-scrollbar text-sm">
+      <div class="text-slate-600 text-xs">
+        <i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>
+        Waiting for file upload...
+      </div>
+    </div>
+  </aside>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module" src="js/types.js"></script>
+  <script type="module" src="js/fileService.js"></script>
+  <script type="module" src="js/geminiService.js"></script>
+  <script type="module" src="js/uiComponents.js"></script>
+  <script type="module" src="js/main.js"></script>
+  
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
